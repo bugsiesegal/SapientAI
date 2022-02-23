@@ -9,17 +9,48 @@ likely remove this documentation. If the AI I make using this becomes sentient a
 know its all in good fun and I don't mean this to be insulting.
 
 """
+from abc import ABC
 
 
-class Neuron:
-    def __init__(self, energy_loss_rate=1):
-        self.energy = 0
+class Axon:
+    input_neuron: 'Neuron'
+    output_neuron: 'Neuron'
+    activation_potential: float
+    weight: float
+    propagation_time: int
+    propagation_ticks: int
+    is_propagating: bool
+
+    def __init__(
+            self,
+            input_neuron: 'Neuron',
+            activation_potential: float,
+            weight: float,
+            propagation_time: int
+    ):
+        self.input_neuron = input_neuron
+        self.activation_potential = activation_potential
+        self.weight = weight
+        self.propagation_time = propagation_time
+        self.propagation_ticks = 0
+        self.is_propagating = False
+
+    def add_neuron(self, output_neuron: 'Neuron'):
+        self.output_neuron = output_neuron
+
+
+class Neuron(ABC):
+    energy: float
+    energy_loss_rate: float
+
+    def __init__(self, energy_loss_rate: float):
         self.energy_loss_rate = energy_loss_rate
-        self.output_axons = []
-        self.input_axons = []
 
-    def add_axon(self, potential, weight):
-        axon = Axon(potential, weight)
 
-        axon.set_input(self)
-        self.output_axons.append(axon)
+class Simple_Neuron(Neuron):
+    input_axons: list[Axon]
+    input_neurons: list[Neuron]
+    output_axons: list[Axon]
+    output_neurons: list[Neuron]
+
+    def __init__(self):
