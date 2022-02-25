@@ -66,22 +66,17 @@ class Axon:
             pass
 
 
-class Neuron(ABC):
+class Neuron:
+    input_axons: list[Axon]
+    input_neurons: list['Neuron']
+    output_axons: list[Axon]
+    output_neurons: list['Neuron']
     energy: float
     energy_loss_rate: float
 
     def __init__(self, energy_loss_rate: float):
         self.energy_loss_rate = energy_loss_rate
-
-
-class Simple_Neuron(Neuron):
-    input_axons: list[Axon]
-    input_neurons: list[Neuron]
-    output_axons: list[Axon]
-    output_neurons: list[Neuron]
-
-    def __init__(self, energy_loss_rate: float):
-        super().__init__(energy_loss_rate)
+        self.energy_survival_rate = 1 - self.energy_loss_rate
 
     def add_input(self, input_axon: Axon):
         self.input_axons.append(input_axon)
@@ -92,35 +87,23 @@ class Simple_Neuron(Neuron):
         self.output_neurons.append(output_axon.output_neuron)
 
     def step(self):
-        self.energy -= self.energy * self.energy_loss_rate
+        self.energy *= self.energy_survival_rate
 
 
 class Sensory_Neuron(Neuron):
-    output_axons: list[Axon]
-    output_neurons: list[Neuron]
+    input_axons: None
+    input_neurons: None
 
-    def __init__(self, energy_loss_rate: float):
-        super().__init__(energy_loss_rate)
+    def add_input(self, input_axon: Axon):
+        raise Exception('No input axon for Sensor_Neuron.')
 
-    def add_output(self, output_axon: Axon):
-        self.output_axons.append(output_axon)
-        self.output_neurons.append(output_axon.output_neuron)
-
-    def step(self, input_energy):
+    def sense(self, input_energy):
         self.energy = input_energy
 
 
 class Action_Neuron(Neuron):
-    input_axons: list[Axon]
-    input_neurons: list[Neuron]
+    output_neurons: None
+    output_axons: None
 
-    def __init__(self, energy_loss_rate: float):
-        super().__init__(energy_loss_rate)
-
-    def add_input(self, input_axon: Axon):
-        self.input_axons.append(input_axon)
-        self.input_neurons.append(input_axon.input_neuron)
-
-    def step(self):
-        return self.energy
-
+    def add_output(self, output_axon: Axon):
+        raise Exception('No output axon for Action_Neuron.')
