@@ -12,8 +12,10 @@ OK, I have made a lot of improvements to the design so it's not as bad. (:
 
 """
 from abc import ABC
+from dataclasses import dataclass
 
 
+@dataclass
 class Axon:
     """
     This is an Axon. It is a key component to the brain. After researching Axons more I have added new features to
@@ -23,34 +25,9 @@ class Axon:
     output_neuron: 'Neuron'
     activation_potential: float
     weight: float
-    propagation_time: int
-    propagation_ticks: int
-    is_propagating: bool
-
-    def __init__(
-            self,
-            input_neuron: 'Neuron',
-            activation_potential: float,
-            weight: float,
-            propagation_time: int
-    ):
-        """
-        Initialization Method for an axon.
-
-        :param input_neuron: The neuron the axon propagates from.
-        :param activation_potential: How much energy needs to be contained in the input_neuron for this axon to be activated.
-        :param weight:
-        :param propagation_time:
-        """
-        self.input_neuron = input_neuron
-        self.activation_potential = activation_potential
-        self.weight = weight
-        self.propagation_time = propagation_time
-        self.propagation_ticks = 0
-        self.is_propagating = False
-
-    def add_neuron(self, output_neuron: 'Neuron'):
-        self.output_neuron = output_neuron
+    propagation_time: int = 0
+    propagation_ticks: int = 0
+    is_propagating: bool = False
 
     def propagate(self):
         if self.is_propagating:
@@ -91,8 +68,6 @@ class Neuron:
 
 
 class Sensory_Neuron(Neuron):
-    input_axons: None
-    input_neurons: None
 
     def add_input(self, input_axon: Axon):
         raise Exception('No input axon for Sensor_Neuron.')
@@ -102,8 +77,5 @@ class Sensory_Neuron(Neuron):
 
 
 class Action_Neuron(Neuron):
-    output_neurons: None
-    output_axons: None
-
     def add_output(self, output_axon: Axon):
         raise Exception('No output axon for Action_Neuron.')
