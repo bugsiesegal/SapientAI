@@ -4,6 +4,7 @@ import numpy as np
 
 from Src.Neuron import Neuron, Action_Neuron, Sensory_Neuron
 from Src.Axon import Axon
+from Src.Gene import NeuronGene, AxonGene, Genome
 
 
 class Brain:
@@ -33,15 +34,16 @@ class Brain:
             raise ValueError("Object not supported.")
 
     @staticmethod
-    def send_sensory_input_to_array(array: np.ndarray[Sensory_Neuron], sensory_input: np.ndarray):
+    def send_sensory_input_to_array(array: np.ndarray, sensory_input: np.ndarray):
         for i, obj in np.ndenumerate(array):
             obj.sense(sensory_input[i])
 
     @staticmethod
-    def get_action_from_array(array: np.ndarray[Action_Neuron]) -> np.ndarray[float]:
+    def get_action_from_array(array: np.ndarray) -> np.ndarray:
         out_array = np.empty(array.shape)
         for i, obj in np.ndenumerate(array):
             out_array[i] = obj.energy
+            obj.step()
 
         return out_array
 
@@ -63,6 +65,53 @@ class Brain:
             if type(action_object) == np.ndarray:
                 action.append(self.get_action_from_array(action_object))
             else:
-                action.append(action_object)
+                action.append(action_object.energy)
+                action_object.step()
 
         return action
+
+    def to_genome(self) -> Genome:
+        neuron_genes = []
+        axon_genes = []
+        neuron_id_dict = {}
+
+        for i, neuron in enumerate(self.neurons + self.action_neurons + self.sensory_neurons):
+            if type(neuron) == Neuron:
+                neuron_genes.append(NeuronGene(i, neuron.energy_loss_rate, 0))
+            elif type(neuron) == Sensory_Neuron:
+                neuron_genes.append(NeuronGene(i, neuron.energy_loss_rate, 1))
+            else:
+                neuron_genes.append(NeuronGene(i, neuron.energy_loss_rate, 2))
+            neuron_id_dict[neuron] = i
+
+        for i, axon in enumerate(self.axons):
+            axon_genes.append(AxonGene(i, neuron_id_dict[axon.input_neuron], neuron_id_dict[axon.output_neuron],
+                                       axon.activation_potential, axon.weight, axon.propagation_time))
+
+        return Genome(neuron_genes, axon_genes)
+
+    @classmethod
+    def to_brain(cls, genome: 'Genome'):
+        brain = cls()
+        id_to_neuron = {}
+
+        for neuron_gene in genome.neuron_genes:
+            if neuron_gene.neuron_type == 0:
+                new_neuron = Neuron(neuron_gene.energy_loss_rate)
+                id_to_neuron[neuron_gene.id] = new_neuron
+                brain.add(new_neuron)
+            elif neuron_gene.neuron_type == 1:
+                new_neuron = Sensory_Neuron(neuron_gene.energy_loss_rate)
+                id_to_neuron[neuron_gene.id] = new_neuron
+                brain.add(new_neuron)
+            else:
+                new_neuron = Action_Neuron(neuron_gene.energy_loss_rate)
+                id_to_neuron[neuron_gene.id] = new_neuron
+                brain.add(new_neuron)
+
+        for axon_gene in genome.axon_genes:
+            new_axon = Axon(id_to_neuron[axon_gene.input_neuron_id], id_to_neuron[axon_gene.output_neuron_id],
+                            axon_gene.activation_potential, axon_gene.weight, axon_gene.propagation_time)
+            brain.add(new_axon)
+
+        return brain

@@ -14,6 +14,12 @@ class Neuron:
     def __init__(self, energy_loss_rate: float = 1):
         self.energy_loss_rate = energy_loss_rate
         self.energy_survival_rate = 1 - self.energy_loss_rate
+        self.id = None
+        self.energy = 0
+        self.input_axons = []
+        self.input_neurons = []
+        self.output_neurons = []
+        self.output_axons = []
 
     def add_input(self, input_axon: Axon):
         self.input_axons.append(input_axon)

@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-from Src.Neuron import Neuron
-
 
 @dataclass
 class Axon:
@@ -9,8 +7,8 @@ class Axon:
     This is an Axon. It is a key component to the brain. After researching Axons more I have added new features to
     this Axon such as propagation time and nothing else. There is only one new feature, I'm not a neuroscientist ok?
     """
-    input_neuron: Neuron
-    output_neuron: Neuron
+    input_neuron: 'Neuron'
+    output_neuron: 'Neuron'
     activation_potential: float
     weight: float
     propagation_time: int = 0
