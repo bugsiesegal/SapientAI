@@ -110,8 +110,11 @@ class Brain:
                 brain.add(new_neuron)
 
         for axon_gene in genome.axon_genes:
-            new_axon = Axon(id_to_neuron[axon_gene.input_neuron_id], id_to_neuron[axon_gene.output_neuron_id],
-                            axon_gene.activation_potential, axon_gene.weight, axon_gene.propagation_time)
-            brain.add(new_axon)
+            try:
+                new_axon = Axon(id_to_neuron[axon_gene.input_neuron_id], id_to_neuron[axon_gene.output_neuron_id],
+                                axon_gene.activation_potential, axon_gene.weight, axon_gene.propagation_time)
+                brain.add(new_axon)
+            except:
+                pass
 
         return brain

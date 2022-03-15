@@ -24,3 +24,4 @@ class Axon:
 
         if self.input_neuron.energy >= self.activation_potential:
             self.propagations.append(self.propagation_time)
+

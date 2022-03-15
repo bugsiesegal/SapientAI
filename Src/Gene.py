@@ -2,6 +2,10 @@ import random
 from dataclasses import dataclass
 
 import numpy as np
+import networkx as nx
+import pandas as pd
+from networkx import DiGraph
+from pyvis.network import Network
 
 
 @dataclass
@@ -64,22 +68,20 @@ class Genome:
         Params: {"Mutation_Weights", "Weight Adj Sigma", "New Axon Act Low", "New Axon Act High", "New Axon Weight Low",
         "New Axon Weight High", "Propagation Time"}
         """
-        c = np.random.choice(5, params["Mutation_Weights"])
-
-        if c == 0:
-            i = random.randint(0, len(self.axon_genes))
+        c = np.random.choice(5, p=params["Mutation_Weights"])
+        if c == 0 and len(self.axon_genes) > 1:
+            i = random.randint(0, len(self.axon_genes)-1)
 
             self.axon_genes[i].weight = random.gauss(self.axon_genes[i].weight, params["Weight Adj Sigma"])
-        elif c == 1:
-            i = random.randint(0, len(self.axon_genes))
-
+        elif c == 1 and len(self.axon_genes) > 1:
+            i = random.randint(0, len(self.axon_genes)-1)
             self.neuron_genes.append(NeuronGene(len(self.neuron_genes), random.random(), 0))
-
             self.axon_genes.append(AxonGene(len(self.axon_genes),
                                             self.axon_genes[i].input_neuron_id,
-                                            len(self.neuron_genes)-1,
+                                            len(self.neuron_genes) - 1,
                                             random.uniform(params["New Axon Act Low"], params["New Axon Act High"]),
-                                            random.uniform(params["New Axon Weight Low"], params["New Axon Weight High"]),
+                                            random.uniform(params["New Axon Weight Low"],
+                                                           params["New Axon Weight High"]),
                                             random.randint(0, params["Propagation Time"])
                                             ))
 
@@ -91,6 +93,9 @@ class Genome:
                                                            params["New Axon Weight High"]),
                                             random.randint(0, params["Propagation Time"])
                                             ))
+
+            self.axon_genes.pop(i)
+
         elif c == 2:
             neuron_connection_points = random.choices(self.neuron_genes, k=2)
             if neuron_connection_points[0].neuron_type != 2 and neuron_connection_points[1].neuron_type != 1 and self.get_axon_by_connections(neuron_connection_points[0], neuron_connection_points[1]) is None:
@@ -125,10 +130,24 @@ class Genome:
                         self.axon_genes.append(AxonGene(len(self.axon_genes),
                                                         input_axon.id,
                                                         output_axon.id,
-                                                        input_axon.activation_potential+output_axon.activation_potential,
-                                                        input_axon.weight+output_axon.weight,
-                                                        input_axon.propagation_time+output_axon.propagation_time
+                                                        input_axon.activation_potential + output_axon.activation_potential,
+                                                        input_axon.weight + output_axon.weight,
+                                                        input_axon.propagation_time + output_axon.propagation_time
                                                         ))
 
         else:
-            self.axon_genes.remove(random.choice(self.axon_genes))
+            if len(self.axon_genes) != 0:
+                self.axon_genes.remove(random.choice(self.axon_genes))
+
+    def plot(self):
+        inputs = [i.input_neuron_id for i in self.axon_genes]
+        outputs = [i.output_neuron_id for i in self.axon_genes]
+        print(inputs)
+        print(outputs)
+        df = pd.DataFrame(data={'Source': inputs, 'Target': outputs}).sort_values(by=['Source'])
+        print(df)
+        G = nx.from_pandas_edgelist(df, source="Source", target="Target", create_using=DiGraph)
+        net = Network(bgcolor='#222222', font_color='white', directed=True)
+        net.show_buttons()
+        net.from_nx(G)
+        net.show("test.html")
