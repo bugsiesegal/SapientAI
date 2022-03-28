@@ -1,58 +1,47 @@
-import numpy as np
-
-from Src.Axon import Axon
+from params import NEURON_ENERGY_LOSS_RATE_PROB, NEURON_ENERGY_LOSS_SIGMA
+import random
 
 
 class Neuron:
-    input_axons: list[Axon]
-    input_neurons: list['Neuron']
-    output_axons: list[Axon]
-    output_neurons: list['Neuron']
-    energy: float
-    energy_loss_rate: float
+    """
+    Simulates A Neuron.
+    """
+    def __init__(self, gene_id, neuron_type=0, energy_loss_rate=0, sensory_index=0):
+        """
+        :param gene_id: Historical Gene Id.
+        :param neuron_type: Type of Neuron. 0 is Normal Neuron. 1 is Sensory Neuron. 2 is Action Neuron.
+        :param energy_loss_rate: Energy loss rate.
+        """
 
-    def __init__(self, energy_loss_rate: float = 1):
-        self.energy_loss_rate = energy_loss_rate
-        self.energy_survival_rate = 1 - self.energy_loss_rate
+        # Historical Gene Id
+        self.gene_id = gene_id
 
-    def add_input(self, input_axon: Axon):
-        self.input_axons.append(input_axon)
-        self.input_neurons.append(input_axon.input_neuron)
-        Axon.output_neuron = self
+        # Held Energy
+        self.energy = 0
+        # Rate Energy is lost per step.
+        self.energy_loss_rate = 1 - energy_loss_rate
 
-    def add_output(self, output_axon: Axon):
-        self.output_axons.append(output_axon)
-        self.output_neurons.append(output_axon.output_neuron)
-        Axon.input_neuron = self
+        # Type of Neuron (Normal, Sensory, Action)
+        self.neuron_type = neuron_type
 
-    def step(self):
-        self.energy *= self.energy_survival_rate
+        # If sensory which part of input sensory array it looks at.
+        self.sensory_index = sensory_index
 
+    def step(self, *args) -> None:
+        """
+        Loses energy based on energy loss rate. Gains energy based on sensory input.
 
-class Sensory_Neuron(Neuron):
-    def add_input(self, input_axon: Axon):
-        raise Exception('No input axon for Sensor_Neuron.')
+        :param args: Sensory input.
+        """
+        self.energy = self.energy_loss_rate * self.energy
 
-    def sense(self, input_energy):
-        self.energy = input_energy
+        if self.neuron_type == 1:
+            self.energy = args[self.sensory_index]
 
-    @staticmethod
-    def sensory_array(shape: tuple[int], energy_loss_rate: float = 0):
-        a = np.empty(shape, dtype=Sensory_Neuron)
-        for i, obj in np.ndenumerate(a):
-            a[i] = Sensory_Neuron(energy_loss_rate)
+    def to_gene(self) -> list:
+        """
+        Converts Neuron to gene.
 
-        return a
-
-
-class Action_Neuron(Neuron):
-    def add_output(self, output_axon: Axon):
-        raise Exception('No output axon for Action_Neuron.')
-
-    @staticmethod
-    def action_array(shape: tuple[int], energy_loss_rate: float = 1):
-        a = np.empty(shape, dtype=Action_Neuron)
-        for i, obj in np.ndenumerate(a):
-            a[i] = Action_Neuron(energy_loss_rate)
-
-        return a
+        :return: [Gene id, Energy Loss Rate, Neuron Type, Sensory Index]
+        """
+        return [self.gene_id, self.energy_loss_rate, self.sensory_index, self.neuron_type]
