@@ -1,4 +1,4 @@
-from Neuron import Neuron
+from Src.Neuron import Neuron
 
 
 class Axon:
@@ -18,3 +18,7 @@ class Axon:
 
     def to_gene(self):
         return [self.input_neuron.gene_id, self.output_neuron.gene_id, self.activation_potential, self.weight]
+
+    @classmethod
+    def from_gene(cls, gene: list, id_to_neuron: dict[int, Neuron]):
+        return cls(id_to_neuron[gene[0]], id_to_neuron[gene[1]], gene[2], gene[3])
